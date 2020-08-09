@@ -1,0 +1,4 @@
+Google Спутник: http://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}
+Google Карта: http://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}
+Google Гибрид: http://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}
+Google Terrain: http://{s}.google.com/vt/lyrs=p&x={x}&y={y}&z={z}

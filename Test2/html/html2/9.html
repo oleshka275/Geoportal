@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Аптеки в Сергиев Посаде</title>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<script src="./bin/leaflet.js"></script>
+	<script src="./bin/Yandex.js"></script>
+	<script src="http://api-maps.yandex.ru/2.0/?load=package.map&lang=RU"></script>
+	<script src="./bin/leaflet-measure.min.js"></script>
+	<script src="./bin/leaflet.markercluster.js"></script>
+	<link rel="stylesheet" href="./bin/leaflet.css">
+	<link rel="stylesheet" href="./bin/leaflet-measure.css">
+	<link rel="stylesheet" href="./bin/MarkerCluster.css">
+	<link rel="stylesheet" href="./bin/MarkerCluster.Default.css">
+	<script src="./bin/leaflet-heat.js"></script>
+	<style>
+		#map{height:500px; width:800px}
+		.infolgnd{background: white; padding: 6px; border-radius: 5px; background:rgba(255,255,255,0,8) }
+		h1{text-align: center}
+	</style>
+</head>
+<body>
+	<h1>"Аптеки в Сергиев Посаде"</h1>
+	<div id="map"></div>
+	<script src="./date/Apteki.js"> </script>
+	<script>
+		var mOSM ='http://a.tile.openstreetmap.org/{z}/{x}/{y}.png';
+		var GM = [L.tileLayer('http://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {maxZoom: 20, subdomains:['mt0','mt1','mt2','mt3']}),
+				  L.tileLayer('http://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {maxZoom: 20, subdomains:['mt0','mt1','mt2','mt3']}),
+				  L.tileLayer('http://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}', {maxZoom: 20, subdomains:['mt0','mt1','mt2','mt3']})]
+		var mURL = 'https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw',
+			mAttr ='Права на карту пренадлежат не мне';
+		var ya = new L.Yandex();
+		var yaTr = new L.Yandex("null",{traffic:true, opacity:1, overlay: true});
+		var mbOSM = L.tileLayer(mURL,{attribution: mAttr, id:'mapbox.streets'});
+		var mtOSM = L.tileLayer(mOSM,{attribution:mAttr});
+		var WMSCad = L.tileLayer.wms('https://pkk5.rosreestr.ru/arcgis/services/Cadastre/CadastreWMS/MapServer/WMSServer?',{
+				 layers: '27,28,29,30,31,32',
+				format: 'image/png',
+				transparent: true			
+				}); // объявление базовых слоёв
+		
+		var map = L.map('map', {
+				center: [56.315321, 38.135766],
+				zoom: 14,
+				minZoom: 7,
+				maxZoom: 19,
+				zoomControl: false,
+				attributionControl: false,				
+				maxBounds:[[56.932987,34.958496],[54.175297,40.231934]],
+				layers: [mbOSM]
+			});		// объект карты и его свойства
+	
+		var Aicn = L.Icon.extend({
+		options:{iconSize:[32,32],
+				iconAnchor: [16,32],
+				popupAnchor:[0,-20]
+				}
+		}) // класс эконки
+		
+		var AicnT = [new Aicn({iconUrl: './date/icons/19.png'}),
+					   new Aicn({iconUrl: './date/icons/20.png'}),
+					   new Aicn({iconUrl: './date/icons/21.png'}),
+					   new Aicn({iconUrl: './date/icons/22.png'}),
+					   new Aicn({iconUrl: './date/icons/24.png'}),
+					   new Aicn({iconUrl: './date/icons/time.png'})
+					];		// массив эконок
+					
+		var apteki2 = L.geoJSON(apt, {pointToLayer: function(feature,latlng){
+		var vrema = feature.properties.Time;
+vrema == '09:00 – 19:00' || vrema == '08:00 – 19:00' ? icn = AicnT[0]:
+vrema == '09:00 – 20:00' || vrema == '08:00 – 20:00' ? icn = AicnT[1]:
+vrema == '09:00 – 21:00' || vrema == '08:00 – 21:00' || vrema == '10:00 – 21:00' ? icn = AicnT[2]:
+vrema == '09:00 – 22:00' || vrema == '08:00 – 22:00' || vrema == '10:00 – 22:00' ? icn = AicnT[3]:
+vrema == 'Круглосуточно' ? icn = AicnT[4]:
+icn = AicnT[5]; // загрузка аптек из geoJSON	
+		return L.marker(latlng,{icon: icn})
+		}}) // загрузка аптек из geoJSON	
+				
+				.bindPopup(function(apt) {
+			var WApteki = '';
+			if (apt.feature.properties.Name != '(0:)') {
+			WApteki = '<br><img src ="./date/aptek/' + apt.feature.properties.id + '/' + apt.feature.properties.id + '.jpg" height ="150" width = "267">';}
+						return '<b> Имя: </b> ' + apt.feature.properties.Name +
+								WApteki 
+			});
+		
+		
+		var cc = L.markerClusterGroup({
+				showCoverageOnHover: false,
+				//zoomToBoundsOnClick: false,
+				//spiderflyOnMaxZoom: false,
+				removeOutsideVisibleBounds: true,
+				spiderLegPolylineOptions: {weight: 2, color: '#775249', opacity: 1},
+				//disableCluster...
+				maxClusterRadius: 200 //кластеризация
+			});
+		cc.addLayer(apteki2);
+		map.addLayer(cc);
+		var AptekiK = cc;
+	
+	var Hmap = L.heatLayer([
+	[56.339821523624906, 38.124630633855233, 0.6],
+	[56.333715327363933, 38.132270554364702, 0.75],
+	[56.327263282632337, 38.131501616703844, 0.5],
+	[56.326358895338323, 38.1334974385924, 0.65],
+	[56.3255319205566,   38.133854261495252, 0.8] 
+	[56.328845143026498, 38.143855078745695,0.7],
+	[56.328046737135388, 38.148894591250674,0.65],
+	[56.32800328599351,  38.151964245812394,0.9],
+	[56.328348178064708, 38.152834307137219,0.5],
+	[56.32710981087812,  38.151055080607811,0.6],
+	[56.327919099264776, 38.154305590613454,0.8],
+	[56.330703951635705, 38.155500702938816,0.9],
+	[56.330246386292146, 38.154540213892048,0.9],
+	[56.324541971423621, 38.141838784945186,0.8],
+	[56.322559279738513, 38.145612309342702,0.7],
+	[56.317104986224017, 38.138827786203102,0.5],
+	[56.316007513906293, 38.13680416042515,0.6],
+	[56.314855677214226 ,38.137380942651703,0.5],
+	[56.314035243958209, 38.136286034018227,0.75]
+	], {
+		radius: 80,
+		blur: 50,
+		maxZoom: 15,
+		// minOpacity: 0.2,
+		gradient: {0.4: 'yellow', 0.65:'lime',1:'green' }
+	}); // карта плотности аптек 
+		
+	
+		
+		var baseLayers = {
+			"Цифровая карта": mtOSM,
+			"Карта MapBox OSM": mbOSM,
+			"Google Спутник": GM[0],
+			"Google Карта": GM[1],
+			"Google Гибрид": GM[2],
+			"Яндекс Карта": ya,
+			"Яндекс Пробки": yaTr
+			}; // перечень базовых карт
+		
+		var overlays = {
+		    "кадастровая Карта(района)": WMSCad,
+			"Аптеки в Сергиев Посаде" : apteki2,
+			"Кластеризованные автомобили": AptekiK,  
+			"Карта плотности Аптек": Hmap
+		}; // перечень overlayt слоёв
+		
+		L.control.layers(baseLayers, overlays).addTo(map); // элемент интерфейса для выбора слоёв
+		L.control.scale({imperial: false, maxwidth: 200, position: 'bottomright'}).addTo(map); // элемент интерфейса масштабная линейка
+		
+		var msrControl = new L.Control.Measure({
+				localization: 'ru',
+				secondaryAreaUnit: 'sqmeters',
+				primaryLengthUnit: 'kilometers', secondaryLengthUnit: 'meters',
+				primaryAreaUnit: 'hectares', secondaryAreaUnit: 'sqmeters'
+		});
+		msrControl.addTo(map); // элемент интерфейса для проведения измерений и его настройки
+	
+	 var lgnd = L.control({position: 'bottomleft'}) // 'элемент интерфейса - легенда
+	
+	lgnd.onAdd = function (map) {
+		var div = L.DomUtil.create('div','infolgnd'),
+	 labels = [];
+	labels.push('<b> Часы работы аптек </b>');
+	labels.push('<img src ="./date/icons/19.png" height ="15" width = "15">'+'До 19.00');
+	labels.push('<img src ="./date/icons/20.png" height ="15" width = "15">'+'До 20.00');
+	labels.push('<img src ="./date/icons/21.png" height ="15" width = "15">'+'До 21.00');
+	labels.push('<img src ="./date/icons/22.png" height ="15" width = "15">'+'До 22.00');
+	labels.push('<img src ="./date/icons/24.png" height ="15" width = "15">'+'Круглосуточно');
+	labels.push('<img src ="./date/icons/time.png" height ="15" width = "15">'+'Другое время');
+	div.innerHTML = labels.join('<br>');
+	return div
+	}
+	lgnd.addTo(map);
+	
+
+	
+	</script>
+</body>
+</html>

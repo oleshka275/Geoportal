@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Велопарковки в Сергиев Посаде</title>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<script src="./bin/leaflet.js"></script>
+	<script src="./bin/Yandex.js"></script>
+	<script src="http://api-maps.yandex.ru/2.0/?load=package.map&lang=RU"></script>
+	<script src="./bin/leaflet-measure.min.js"></script>
+	<link rel="stylesheet" href="./bin/leaflet.css">
+	<link rel="stylesheet" href="./bin/leaflet-measure.css">
+	<style>
+		#map{height:500px; width:800px}
+		h1{text-align: center}
+	</style>
+</head>
+<body>
+	<h1>"Велопарковки в Сергиев Посаде"</h1>
+	<div id="map"></div>
+	<script>
+		var mOSM ='http://a.tile.openstreetmap.org/{z}/{x}/{y}.png';
+		var GM = [L.tileLayer('http://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {maxZoom: 20, subdomains:['mt0','mt1','mt2','mt3']}),
+				L.tileLayer('http://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {maxZoom: 20, subdomains:['mt0','mt1','mt2','mt3']}),
+				L.tileLayer('http://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}', {maxZoom: 20, subdomains:['mt0','mt1','mt2','mt3']})]
+		var mURL = 'https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw',
+			mAttr ='Права на карту пренадлежат не мне';
+		var ya = new L.Yandex();
+		var yaTr = new L.Yandex("null",{traffic:true, opacity:1, overlay: true});
+		var mbOSM = L.tileLayer(mURL,{attribution: mAttr, id:'mapbox.streets'});
+		var mtOSM = L.tileLayer(mOSM,{attribution:mAttr});
+		var WMSCad = L.tileLayer.wms('https://pkk5.rosreestr.ru/arcgis/services/Cadastre/CadastreWMS/MapServer/WMSServer?',{
+				layers: '27,28,29,30,31,32',
+				format: 'image/png',
+				transparent: true			
+				});
+		
+		var baseLayers = {
+			"Цифровая карта": mtOSM,
+			"Карта MapBox OSM": mbOSM,
+			"Google Спутник": GM[0],
+			"Google Карта": GM[1],
+			"Google Гибрид": GM[2],
+			"Яндекс Карта": ya,
+			"Яндекс Пробки": yaTr
+		//	"кадастровая Карта(района)": WMSCad
+		};
+		
+		var overlays = {
+		    "кадастровая Карта(района)": WMSCad
+		};
+		
+		/*var overlays = {
+			"яндекс пробки" : yaTf
+		};*/
+		
+		var map = L.map('map', {
+				center: [56.315321, 38.135766],
+				zoom: 14,
+				minZoom: 7,
+				maxZoom: 19,
+				zoomControl: false,
+				attributionControl: false,				
+				maxBounds:[[56.932987,34.958496],[54.175297,40.231934]],
+				layers: [mbOSM]
+			});			
+		L.control.layers(baseLayers, overlays).addTo(map);
+		L.control.scale({imperial: false, maxwidth: 200, position: 'bottomright'}).addTo(map);
+		
+		var msrControl = new L.Control.Measure({
+				localization: 'ru',
+				secondaryAreaUnit: 'sqmeters',
+				primaryLengthUnit: 'kilometers', secondaryLengthUnit: 'meters',
+				primaryAreaUnit: 'hectares', secondaryAreaUnit: 'sqmeters'
+		});
+		msrControl.addTo(map);
+	</script>
+</body>
+</html>
